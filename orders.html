@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders - E-Commerce Sierra Leone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .navbar {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 15px 20px;
+        }
+
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo a {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2e7d32;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .orders-header {
+            margin-bottom: 20px;
+        }
+
+        .orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .order-header {
+            background: #f5f5f5;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .order-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .order-status.Pending { background: #fff3e0; color: #ff9800; }
+        .order-status.Processing { background: #e3f2fd; color: #2196f3; }
+        .order-status.Shipped { background: #e8f5e9; color: #4caf50; }
+        .order-status.Delivered { background: #e8f5e9; color: #4caf50; }
+        .order-status.Cancelled { background: #ffebee; color: #f44336; }
+
+        .order-details {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .order-items {
+            padding: 20px;
+        }
+
+        .order-items ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .order-items li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .order-actions {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #2e7d32;
+            color: white;
+        }
+
+        .status-select {
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        footer {
+            background: #1a1a1a;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-container">
+            <div class="logo">
+                <a href="/index.html">🛍️ E-Commerce Sierra Leone</a>
+            </div>
+            <div class="nav-links">
+                <a href="/index.html">Home</a>
+                <a href="/products.html">Products</a>
+                <a href="#" id="logoutLink">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="orders-header">
+            <h1>My Orders</h1>
+        </div>
+
+        <div id="ordersContainer" class="orders-list">
+            <div style="text-align:center; padding:40px;">Loading orders...</div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 E-Commerce Sierra Leone</p>
+    </footer>
+
+    <script>
+        const API_BASE_URL = "http://localhost:8000";
+
+        function getToken() { return localStorage.getItem("access_token"); }
+        function getUser() { 
+            const user = localStorage.getItem("user");
+            return user ? JSON.parse(user) : null;
+        }
+        function isAdmin() { const user = getUser(); return user && user.role === "admin"; }
+
+        async function apiCall(url, options = {}) {
+            const token = getToken();
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": token ? `Bearer ${token}` : "",
+                    ...options.headers
+                }
+            });
+            if (response.status === 401) {
+                localStorage.clear();
+                window.location.href = "/login.html";
+            }
+            return response;
+        }
+
+        async function loadOrders() {
+            const container = document.getElementById('ordersContainer');
+            const user = getUser();
+            
+            if (!user) {
+                window.location.href = "/login.html";
+                return;
+            }
+            
+            let url;
+            if (isAdmin()) {
+                url = `${API_BASE_URL}/admin/orders`;
+            } else {
+                url = `${API_BASE_URL}/orders/user/${user.id}`;
+            }
+            
+            const response = await apiCall(url);
+            if (response.ok) {
+                const orders = await response.json();
+                if (orders.length === 0) {
+                    container.innerHTML = '<p style="text-align:center">No orders found.</p>';
+                } else {
+                    container.innerHTML = orders.map(order => `
+                        <div class="order-card">
+                            <div class="order-header">
+                                <h3>Order #${order.id}</h3>
+                                <span class="order-status ${order.status}">${order.status}</span>
+                            </div>
+                            <div class="order-details">
+                                <div><strong>Date:</strong> ${new Date(order.created_at).toLocaleString()}</div>
+                                <div><strong>Total:</strong> $${order.total_amount}</div>
+                                <div><strong>Items:</strong> ${order.items?.length || 0}</div>
+                            </div>
+                            <div class="order-items">
+                                <strong>Items:</strong>
+                                <ul>
+                                    ${order.items?.map(item => `
+                                        <li>${item.product_name || `Product #${item.product_id}`} - Qty: ${item.quantity} - $${item.price}</li>
+                                    `).join('') || '<li>No items</li>'}
+                                </ul>
+                            </div>
+                            ${isAdmin() ? `
+                                <div class="order-actions">
+                                    <select id="status-${order.id}" class="status-select">
+                                        <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                                        <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                                        <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                                        <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                    </select>
+                                    <button class="btn btn-primary" onclick="updateStatus(${order.id})">Update Status</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+
+        window.updateStatus = async function(orderId) {
+            const select = document.getElementById(`status-${orderId}`);
+            const newStatus = select.value;
+            const response = await apiCall(`${API_BASE_URL}/admin/orders/${orderId}/status?status_value=${newStatus}`, { method: "PUT" });
+            if (response.ok) {
+                loadOrders();
+                alert(`Order #${orderId} status updated to ${newStatus}`);
+            } else {
+                alert("Failed to update order status");
+            }
+        };
+
+        document.getElementById('logoutLink').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = "/login.html";
+        });
+
+        loadOrders();
+    </script>
+</body>
+</html>
