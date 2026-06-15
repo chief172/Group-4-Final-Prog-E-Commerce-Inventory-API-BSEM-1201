@@ -1,0 +1,255 @@
+<!-- Admin Sidebar Component -->
+<aside class="sidebar" id="adminSidebar">
+    <div class="sidebar-header">
+        <h2>Admin Panel</h2>
+        <button class="sidebar-close" id="sidebarClose">✕</button>
+    </div>
+    
+    <div class="sidebar-user">
+        <div class="user-avatar">👑</div>
+        <div class="user-info-sidebar">
+            <span id="sidebarUsername">Admin</span>
+            <small id="sidebarUserRole">Administrator</small>
+        </div>
+    </div>
+    
+    <nav class="sidebar-nav">
+        <a href="/dashboard.html" class="nav-item" data-nav="dashboard">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">Dashboard</span>
+        </a>
+        
+        <a href="/products.html" class="nav-item" data-nav="products">
+            <span class="nav-icon">📦</span>
+            <span class="nav-text">Products</span>
+        </a>
+        
+        <a href="/categories.html" class="nav-item" data-nav="categories">
+            <span class="nav-icon">📁</span>
+            <span class="nav-text">Categories</span>
+        </a>
+        
+        <a href="/orders.html" class="nav-item" data-nav="orders">
+            <span class="nav-icon">📋</span>
+            <span class="nav-text">Orders</span>
+        </a>
+        
+        <a href="/users.html" class="nav-item" data-nav="users">
+            <span class="nav-icon">👥</span>
+            <span class="nav-text">Users</span>
+        </a>
+        
+        <div class="nav-divider"></div>
+        
+        <a href="/products.html" class="nav-item" data-nav="store">
+            <span class="nav-icon">🏪</span>
+            <span class="nav-text">Store Front</span>
+        </a>
+        
+        <a href="#" id="sidebarLogout" class="nav-item logout">
+            <span class="nav-icon">🚪</span>
+            <span class="nav-text">Logout</span>
+        </a>
+    </nav>
+    
+    <div class="sidebar-footer">
+        <small>E-Commerce Sierra Leone</small>
+        <small>Version 2.0.0</small>
+    </div>
+</aside>
+
+<script>
+    // Initialize sidebar functionality
+    function initSidebar() {
+        // Set active nav item based on current page
+        const currentPath = window.location.pathname;
+        const navItems = document.querySelectorAll('.nav-item');
+        
+        navItems.forEach(item => {
+            const href = item.getAttribute('href');
+            if (href && currentPath.includes(href)) {
+                item.classList.add('active');
+            }
+        });
+        
+        // Update sidebar user info
+        const user = getCurrentUser ? getCurrentUser() : null;
+        const usernameSpan = document.getElementById('sidebarUsername');
+        const roleSpan = document.getElementById('sidebarUserRole');
+        
+        if (user && usernameSpan) {
+            usernameSpan.textContent = user.username || 'Admin';
+            roleSpan.textContent = user.role === 'admin' ? 'Administrator' : 'User';
+        }
+        
+        // Sidebar logout
+        const logoutBtn = document.getElementById('sidebarLogout');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (typeof logoutUser === 'function') {
+                    logoutUser();
+                }
+            });
+        }
+        
+        // Mobile sidebar close
+        const closeBtn = document.getElementById('sidebarClose');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                document.getElementById('adminSidebar')?.classList.remove('open');
+            });
+        }
+    }
+    
+    // Mobile sidebar toggle (call from main page)
+    function toggleSidebar() {
+        const sidebar = document.getElementById('adminSidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('open');
+        }
+    }
+    
+    // Initialize when DOM loads
+    document.addEventListener('DOMContentLoaded', initSidebar);
+</script>
+
+<style>
+    /* Sidebar Styles - Included here for component portability */
+    .sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-xl);
+        padding-bottom: var(--spacing-md);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .sidebar-header h2 {
+        color: var(--white);
+        margin-bottom: 0;
+        font-size: var(--font-size-lg);
+    }
+    
+    .sidebar-close {
+        background: none;
+        border: none;
+        color: var(--white);
+        font-size: 20px;
+        cursor: pointer;
+        display: none;
+    }
+    
+    .sidebar-user {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md);
+        background: rgba(255,255,255,0.1);
+        border-radius: var(--border-radius-md);
+        margin-bottom: var(--spacing-xl);
+    }
+    
+    .user-avatar {
+        font-size: 32px;
+    }
+    
+    .user-info-sidebar {
+        flex: 1;
+    }
+    
+    .user-info-sidebar span {
+        display: block;
+        color: var(--white);
+        font-weight: 500;
+    }
+    
+    .user-info-sidebar small {
+        color: rgba(255,255,255,0.7);
+        font-size: var(--font-size-xs);
+    }
+    
+    .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        flex: 1;
+    }
+    
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md) var(--spacing-lg);
+        color: rgba(255,255,255,0.8);
+        border-radius: var(--border-radius-md);
+        transition: all var(--transition-fast);
+    }
+    
+    .nav-item:hover {
+        background-color: rgba(255,255,255,0.1);
+        color: var(--white);
+    }
+    
+    .nav-item.active {
+        background-color: var(--primary-color);
+        color: var(--white);
+    }
+    
+    .nav-divider {
+        height: 1px;
+        background-color: rgba(255,255,255,0.1);
+        margin: var(--spacing-md) 0;
+    }
+    
+    .nav-item.logout {
+        margin-top: auto;
+        color: #ff6b6b;
+    }
+    
+    .nav-item.logout:hover {
+        background-color: rgba(255,107,107,0.1);
+    }
+    
+    .sidebar-footer {
+        margin-top: var(--spacing-xl);
+        padding-top: var(--spacing-md);
+        border-top: 1px solid rgba(255,255,255,0.1);
+        text-align: center;
+    }
+    
+    .sidebar-footer small {
+        display: block;
+        color: rgba(255,255,255,0.5);
+        font-size: var(--font-size-xs);
+        margin-bottom: var(--spacing-xs);
+    }
+    
+    /* Mobile Styles */
+    @media (max-width: 992px) {
+        .sidebar {
+            position: fixed;
+            left: -280px;
+            transition: left var(--transition-normal);
+            z-index: 1000;
+        }
+        
+        .sidebar.open {
+            left: 0;
+        }
+        
+        .sidebar-close {
+            display: block;
+        }
+        
+        .sidebar-toggle {
+            display: block;
+        }
+    }
+    
+    @media (min-width: 993px) {
+        .sidebar-close {
+            display: none;
+        }
+    }
+</style>

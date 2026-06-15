@@ -1,0 +1,135 @@
+<!-- Navigation Bar Component -->
+<nav class="navbar">
+    <div class="navbar-container">
+        <div class="navbar-brand">
+            <a href="/index.html">🛍️ E-Commerce Sierra Leone</a>
+        </div>
+        
+        <button class="menu-toggle" id="menuToggle">
+            ☰
+        </button>
+        
+        <div class="navbar-menu" id="navbarMenu">
+            <a href="/index.html">Home</a>
+            <a href="/products.html">Products</a>
+            
+            <!-- Dynamic links based on auth status -->
+            <div id="authLinks">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</nav>
+
+<script>
+    // Function to update navbar based on authentication status
+    function updateNavbar() {
+        const authLinks = document.getElementById('authLinks');
+        if (!authLinks) return;
+        
+        const isAuthenticated = localStorage.getItem('access_token');
+        const user = getCurrentUser ? getCurrentUser() : null;
+        
+        if (isAuthenticated && user) {
+            // User is logged in
+            authLinks.innerHTML = `
+                ${user.role === 'admin' ? '<a href="/dashboard.html">📊 Dashboard</a>' : ''}
+                <a href="/orders.html">📦 My Orders</a>
+                <a href="/cart.html">🛒 Cart</a>
+                <div class="user-dropdown">
+                    <span class="user-name">👤 ${escapeHtml(user.username)}</span>
+                    <div class="dropdown-content">
+                        <a href="/profile.html">Profile Settings</a>
+                        <a href="#" id="logoutBtnNav">Logout</a>
+                    </div>
+                </div>
+            `;
+            
+            // Attach logout event
+            const logoutBtn = document.getElementById('logoutBtnNav');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (typeof logoutUser === 'function') {
+                        logoutUser();
+                    }
+                });
+            }
+        } else {
+            // User is not logged in
+            authLinks.innerHTML = `
+                <a href="/login.html">Login</a>
+                <a href="/register.html" class="btn btn-primary btn-sm">Register</a>
+            `;
+        }
+    }
+    
+    // Mobile menu toggle
+    function initMobileMenu() {
+        const menuToggle = document.getElementById('menuToggle');
+        const navbarMenu = document.getElementById('navbarMenu');
+        
+        if (menuToggle && navbarMenu) {
+            menuToggle.addEventListener('click', () => {
+                navbarMenu.classList.toggle('active');
+            });
+        }
+    }
+    
+    // Initialize navbar when DOM loads
+    document.addEventListener('DOMContentLoaded', () => {
+        updateNavbar();
+        initMobileMenu();
+    });
+</script>
+
+<style>
+    /* Navbar Styles - Included here for component portability */
+    .user-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .user-name {
+        cursor: pointer;
+        padding: var(--spacing-sm) var(--spacing-md);
+        display: inline-block;
+    }
+    
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: var(--white);
+        min-width: 160px;
+        box-shadow: var(--shadow-md);
+        border-radius: var(--border-radius-md);
+        z-index: 1000;
+    }
+    
+    .user-dropdown:hover .dropdown-content {
+        display: block;
+    }
+    
+    .dropdown-content a {
+        display: block;
+        padding: var(--spacing-sm) var(--spacing-md);
+        color: var(--dark);
+    }
+    
+    .dropdown-content a:hover {
+        background-color: var(--light-gray);
+    }
+    
+    @media (max-width: 768px) {
+        .user-dropdown {
+            width: 100%;
+        }
+        
+        .dropdown-content {
+            position: static;
+            box-shadow: none;
+            padding-left: var(--spacing-lg);
+        }
+    }
+</style>
